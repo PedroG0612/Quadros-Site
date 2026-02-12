@@ -15,6 +15,9 @@ export const artworks = pgTable("artworks", {
   artist: text("artist").notNull(),
   price: integer("price").notNull(), // stored in cents or whole numbers
   imageUrl: text("image_url").notNull(),
+  description: text("description"),
+  year: integer("year"),
+  medium: text("medium"),
 });
 
 export const insertUserSchema = createInsertSchema(users);
