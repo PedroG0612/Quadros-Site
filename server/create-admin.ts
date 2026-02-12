@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users } from "@shared/schema";
+import { users } from "../shared/schema";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 
@@ -21,10 +21,10 @@ async function createAdmin() {
       username,
       password: hashedPassword,
       isAdmin: true,
-    });
-    console.log("Admin user created successfully!");
-    console.log("Username: admin");
-    console.log("Password: admin_password_123");
+    }).onConflictDoNothing();
+    console.log("Admin user created or already exists.");
+    console.log(`Username: ${username}`);
+    console.log(`Password: ${password}`);
   } catch (error) {
     console.error("Error creating admin user:", error);
   }
