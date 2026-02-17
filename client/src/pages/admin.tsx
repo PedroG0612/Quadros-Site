@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useArtworks, useCreateArtwork, useDeleteArtwork } from "@/hooks/use-artworks";
 import { Layout } from "@/components/layout";
 import { useLocation } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertArtworkSchema, InsertArtwork } from "@shared/schema";
@@ -26,9 +26,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArtworkCard } from "@/components/artwork-card";
-import { Plus, Loader2, Upload } from "lucide-react";
+import { Plus, Loader2, Upload, LayoutDashboard, Database, TrendingUp, Package } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AdminPage() {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -39,6 +40,15 @@ export default function AdminPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
+
+  // Stats calculation
+  const stats = useMemo(() => {
+    if (!artworks) return { totalItems: 0, totalValue: 0, avgPrice: 0 };
+    const totalItems = artworks.length;
+    const totalValue = artworks.reduce((sum, art) => sum + art.price, 0);
+    const avgPrice = totalItems > 0 ? Math.round(totalValue / totalItems) : 0;
+    return { totalItems, totalValue, avgPrice };
+  }, [artworks]);
 
   // Redirect if not admin
   useEffect(() => {
@@ -77,13 +87,13 @@ export default function AdminPage() {
       const { url } = await res.json();
       form.setValue("imageUrl", url);
       toast({
-        title: "Success",
-        description: "Image uploaded successfully",
+        title: "Sucesso",
+        description: "Imagem carregada com sucesso",
       });
     } catch (err) {
       toast({
-        title: "Error",
-        description: "Failed to upload image",
+        title: "Erro",
+        description: "Falha ao carregar imagem",
         variant: "destructive",
       });
     } finally {
@@ -97,8 +107,8 @@ export default function AdminPage() {
         setIsDialogOpen(false);
         form.reset();
         toast({
-          title: "Success",
-          description: "Artwork added to collection",
+          title: "Sucesso",
+          description: "Obra adicionada à coleção",
         });
       },
     });
@@ -117,24 +127,24 @@ export default function AdminPage() {
   return (
     <Layout>
       <div className="container mx-auto px-6 py-12">
-        <div className="flex items-center justify-between mb-12">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6">
           <div>
-            <h1 className="text-3xl font-serif">Gallery Management</h1>
-            <p className="text-muted-foreground mt-2">Manage your collection inventory.</p>
+            <h1 className="text-4xl font-serif uppercase tracking-tighter">Painel Administrativo</h1>
+            <p className="text-muted-foreground mt-2">Gerencie o inventário e visualize estatísticas da ASSIS.</p>
           </div>
           
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="rounded-none bg-black text-white px-6">
+              <Button className="rounded-none bg-primary text-primary-foreground px-8 py-6 h-auto uppercase tracking-[0.2em] text-xs font-bold hover-elevate">
                 <Plus className="w-4 h-4 mr-2" />
-                Add Artwork
+                Adicionar Obra
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-none max-w-md">
+            <DialogContent className="rounded-none max-w-md bg-background border-border">
               <DialogHeader>
-                <DialogTitle className="font-serif text-2xl">New Acquisition</DialogTitle>
-                <DialogDescription>
-                  Enter the details of the new artwork to add to the gallery.
+                <DialogTitle className="font-serif text-2xl uppercase tracking-widest">Nova Aquisição</DialogTitle>
+                <DialogDescription className="uppercase text-[0.6rem] tracking-widest">
+                  Insira os detalhes da nova obra para a galeria.
                 </DialogDescription>
               </DialogHeader>
               <Form {...form}>
@@ -144,9 +154,9 @@ export default function AdminPage() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Title</FormLabel>
+                        <FormLabel className="uppercase text-[0.6rem] tracking-[0.2em]">Título</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Midnight Solitude" {...field} className="rounded-none" />
+                          <Input placeholder="Ex: Solidão à Meia-Noite" {...field} className="rounded-none bg-muted/50" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -157,9 +167,9 @@ export default function AdminPage() {
                     name="artist"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Artist</FormLabel>
+                        <FormLabel className="uppercase text-[0.6rem] tracking-[0.2em]">Artista</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Ansel Adams" {...field} className="rounded-none" />
+                          <Input placeholder="Ex: Ansel Adams" {...field} className="rounded-none bg-muted/50" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -170,13 +180,18 @@ export default function AdminPage() {
                     name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Price (USD)</FormLabel>
+                        <FormLabel className="uppercase text-[0.6rem] tracking-[0.2em]">Preço (USD)</FormLabel>
                         <FormControl>
                           <Input 
-                            type="number" 
-                            {...field} 
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                            className="rounded-none" 
+                            type="text" 
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={field.value === 0 ? "" : field.value}
+                            onChange={(e) => {
+                              const val = e.target.value === "" ? 0 : parseInt(e.target.value.replace(/\D/g, ""));
+                              field.onChange(val);
+                            }}
+                            className="rounded-none bg-muted/50" 
                           />
                         </FormControl>
                         <FormMessage />
@@ -188,10 +203,10 @@ export default function AdminPage() {
                     name="imageUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Artwork Image</FormLabel>
+                        <FormLabel className="uppercase text-[0.6rem] tracking-[0.2em]">Imagem da Obra</FormLabel>
                         <div className="flex gap-4 items-end">
                           <FormControl>
-                            <Input placeholder="https://..." {...field} className="rounded-none" />
+                            <Input placeholder="https://..." {...field} className="rounded-none bg-muted/50" />
                           </FormControl>
                           <div className="relative">
                             <input
@@ -206,11 +221,11 @@ export default function AdminPage() {
                               <Button
                                 type="button"
                                 variant="outline"
-                                className="rounded-none"
+                                className="rounded-none border-dashed"
                                 disabled={isUploading}
                                 asChild
                               >
-                                <span>
+                                <span className="cursor-pointer">
                                   {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                                 </span>
                               </Button>
@@ -227,14 +242,15 @@ export default function AdminPage() {
                       name="year"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Year</FormLabel>
+                          <FormLabel className="uppercase text-[0.6rem] tracking-[0.2em]">Ano</FormLabel>
                           <FormControl>
                             <Input 
-                              type="number" 
-                              {...field} 
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
                               value={field.value || ""}
-                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                              className="rounded-none" 
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value.replace(/\D/g, "")) : null)}
+                              className="rounded-none bg-muted/50" 
                             />
                           </FormControl>
                           <FormMessage />
@@ -246,9 +262,9 @@ export default function AdminPage() {
                       name="medium"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Medium</FormLabel>
+                          <FormLabel className="uppercase text-[0.6rem] tracking-[0.2em]">Técnica</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g. Oil on Canvas" {...field} value={field.value || ""} className="rounded-none" />
+                            <Input placeholder="Ex: Óleo sobre Tela" {...field} value={field.value || ""} className="rounded-none bg-muted/50" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -260,13 +276,13 @@ export default function AdminPage() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Description</FormLabel>
+                        <FormLabel className="uppercase text-[0.6rem] tracking-[0.2em]">Descrição</FormLabel>
                         <FormControl>
                           <textarea 
                             {...field} 
                             value={field.value || ""}
-                            className="w-full min-h-[100px] bg-background border border-input px-3 py-2 text-sm rounded-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                            placeholder="Describe the artwork..."
+                            className="w-full min-h-[100px] bg-muted/50 border border-input px-3 py-2 text-sm rounded-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            placeholder="Descreva a obra..."
                           />
                         </FormControl>
                         <FormMessage />
@@ -275,15 +291,53 @@ export default function AdminPage() {
                   />
                   <Button 
                     type="submit" 
-                    className="w-full rounded-none"
+                    className="w-full rounded-none uppercase tracking-[0.2em] font-bold py-6 h-auto bg-primary text-primary-foreground hover-elevate"
                     disabled={createMutation.isPending || isUploading}
                   >
-                    {createMutation.isPending ? "Adding..." : "Add to Collection"}
+                    {createMutation.isPending ? "Adicionando..." : "Adicionar à Coleção"}
                   </Button>
                 </form>
               </Form>
             </DialogContent>
           </Dialog>
+        </div>
+
+        {/* Dashboard Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+          <Card className="rounded-none bg-card border-border shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Obras Totais</CardTitle>
+              <Package className="w-4 h-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-serif">{stats.totalItems}</div>
+              <p className="text-[0.6rem] text-muted-foreground uppercase tracking-widest mt-1">Peças no inventário</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-none bg-card border-border shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Valor Total</CardTitle>
+              <TrendingUp className="w-4 h-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-serif">${stats.totalValue.toLocaleString()}</div>
+              <p className="text-[0.6rem] text-muted-foreground uppercase tracking-widest mt-1">Estimativa de mercado</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-none bg-card border-border shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Média de Preço</CardTitle>
+              <Database className="w-4 h-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-serif">${stats.avgPrice.toLocaleString()}</div>
+              <p className="text-[0.6rem] text-muted-foreground uppercase tracking-widest mt-1">Por obra de arte</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="text-2xl font-serif uppercase tracking-widest border-b pb-4">Inventário</h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
@@ -292,7 +346,11 @@ export default function AdminPage() {
               key={artwork.id} 
               artwork={artwork} 
               isAdmin={true} 
-              onDelete={(id) => deleteMutation.mutate(id)} 
+              onDelete={(id) => {
+                if (window.confirm("Tem certeza que deseja remover esta obra?")) {
+                  deleteMutation.mutate(id);
+                }
+              }} 
             />
           ))}
         </div>

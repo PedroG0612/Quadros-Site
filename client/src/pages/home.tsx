@@ -62,9 +62,9 @@ export default function HomePage() {
       </section>
 
       {/* Quote Section */}
-      <section className="bg-secondary/30 py-32 border-t">
+      <section className="bg-secondary/10 py-32 border-t border-border">
         <div className="container mx-auto px-6 text-center">
-          <blockquote className="font-serif text-3xl md:text-5xl italic leading-tight max-w-4xl mx-auto text-black/80">
+          <blockquote className="font-serif text-3xl md:text-5xl italic leading-tight max-w-4xl mx-auto text-foreground/80">
             "Black and white are the colors of photography. To me they symbolize the alternatives of hope and despair to which mankind is forever subjected."
           </blockquote>
           <cite className="block mt-8 text-sm uppercase tracking-widest text-muted-foreground font-normal not-italic">
