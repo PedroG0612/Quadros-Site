@@ -2,12 +2,7 @@ import { Artwork } from "@shared/schema";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Link } from "wouter";
 
 interface ArtworkCardProps {
   artwork: Artwork;
@@ -17,115 +12,60 @@ interface ArtworkCardProps {
 
 export function ArtworkCard({ artwork, isAdmin, onDelete }: ArtworkCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   return (
-    <>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="group relative flex flex-col gap-3"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-          <img
-            src={artwork.imageUrl}
-            alt={artwork.title}
-            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 saturate-0 group-hover:saturate-100"
-          />
-          
-          {/* Overlay for price/view action */}
-          <div 
-            className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-          >
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="group relative flex flex-col gap-3"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="relative aspect-[3/4] overflow-hidden bg-muted">
+        <img
+          src={artwork.imageUrl}
+          alt={artwork.title}
+          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+        />
+        
+        {/* Overlay for price/view action */}
+        <div 
+          className={`absolute inset-0 bg-black/20 flex items-center justify-center transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+        >
+          <Link href={`/artwork/${artwork.id}`}>
             <Button 
               variant="outline" 
               className="border-white text-white hover:bg-white hover:text-black rounded-none uppercase tracking-widest text-xs"
-              onClick={() => setIsDetailsOpen(true)}
             >
-              View Details
+              Details
             </Button>
-          </div>
-
-          {isAdmin && onDelete && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(artwork.id);
-              }}
-              className="absolute top-2 right-2 bg-white/90 p-2 text-black hover:bg-red-500 hover:text-white transition-colors z-10"
-              title="Delete Artwork"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-            </button>
-          )}
+          </Link>
         </div>
 
-        <div className="flex justify-between items-start pt-2">
-          <div>
-            <h3 className="font-serif text-lg font-medium leading-tight">{artwork.title}</h3>
-            <p className="text-sm text-muted-foreground mt-1 uppercase tracking-wider text-[0.7rem]">{artwork.artist}</p>
-          </div>
-          <div className="text-right">
-            <span className="font-medium text-sm block">${artwork.price.toLocaleString()}</span>
-          </div>
+        {isAdmin && onDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(artwork.id);
+            }}
+            className="absolute top-2 right-2 bg-white/90 p-2 text-black hover:bg-red-500 hover:text-white transition-colors z-10"
+            title="Delete Artwork"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+          </button>
+        )}
+      </div>
+
+      <div className="flex justify-between items-start pt-2">
+        <div>
+          <h3 className="font-serif text-lg font-medium leading-tight uppercase">{artwork.title}</h3>
+          <p className="text-sm text-muted-foreground mt-1 uppercase tracking-wider text-[0.7rem]">{artwork.artist}</p>
         </div>
-      </motion.div>
-
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-2xl rounded-none">
-          <DialogHeader>
-            <DialogTitle className="font-serif text-3xl">{artwork.title}</DialogTitle>
-          </DialogHeader>
-          <div className="grid md:grid-cols-2 gap-8 mt-4">
-            <div className="aspect-[3/4] overflow-hidden bg-muted">
-              <img
-                src={artwork.imageUrl}
-                alt={artwork.title}
-                className="w-full h-full object-cover saturate-0"
-              />
-            </div>
-            <div className="space-y-6">
-              <div>
-                <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Artist</span>
-                <p className="text-xl font-serif mt-1">{artwork.artist}</p>
-              </div>
-              
-              {artwork.year && (
-                <div>
-                  <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Year</span>
-                  <p className="mt-1">{artwork.year}</p>
-                </div>
-              )}
-
-              {artwork.medium && (
-                <div>
-                  <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Medium</span>
-                  <p className="mt-1">{artwork.medium}</p>
-                </div>
-              )}
-
-              <div>
-                <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Description</span>
-                <p className="mt-2 text-muted-foreground leading-relaxed">
-                  {artwork.description || "No description provided for this minimalist masterpiece."}
-                </p>
-              </div>
-
-              <div className="pt-6 border-t">
-                <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Price</span>
-                <p className="text-2xl font-serif mt-1">${artwork.price.toLocaleString()}</p>
-              </div>
-
-              <Button className="w-full rounded-none uppercase tracking-widest py-6" onClick={() => setIsDetailsOpen(false)}>
-                Enquire
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        <div className="text-right">
+          <span className="font-medium text-sm block">${artwork.price.toLocaleString()}</span>
+        </div>
+      </div>
+    </motion.div>
   );
 }

@@ -10,7 +10,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logoutMutation } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">(
-    () => (localStorage.getItem("theme") as "light" | "dark") || "light"
+    () => (localStorage.getItem("theme") as "dark" | "light") || "dark"
   );
 
   useEffect(() => {
@@ -109,27 +109,37 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href}>
                 <span
-                  className="text-2xl font-serif cursor-pointer block py-2"
+                  className="text-2xl font-serif cursor-pointer block py-2 uppercase"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.label}
                 </span>
               </Link>
             ))}
+            <div className="flex justify-center py-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className="rounded-none"
+              >
+                {theme === "light" ? <Moon className="h-6 w-6" /> : <Sun className="h-6 w-6" />}
+              </Button>
+            </div>
             {user ? (
               <button
                 onClick={() => {
                   logoutMutation.mutate();
                   setIsMobileMenuOpen(false);
                 }}
-                className="text-lg text-muted-foreground pt-4"
+                className="text-lg text-muted-foreground pt-4 uppercase tracking-widest"
               >
                 Logout
               </button>
             ) : (
               <Link href="/auth">
                 <span
-                  className="text-2xl font-serif cursor-pointer block py-2"
+                  className="text-2xl font-serif cursor-pointer block py-2 uppercase"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Login
@@ -147,20 +157,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <footer className="border-t py-12 bg-black text-white">
         <div className="container mx-auto px-6 grid md:grid-cols-3 gap-8 text-center md:text-left">
           <div>
-            <h4 className="font-serif text-xl mb-4">NOIR & BLANC</h4>
+            <h4 className="font-serif text-xl mb-4 tracking-widest uppercase">ASSIS</h4>
             <p className="text-sm text-gray-400 leading-relaxed">
-              Curating the finest monochromatic art pieces for the modern collector.
-              Simplicity is the ultimate sophistication.
+              Curadoria exclusiva de arte monocromática para o colecionador moderno.
+              Simplicidade é o último grau de sofisticação.
             </p>
           </div>
           <div className="md:col-span-2 flex flex-col md:items-end justify-center">
-            <div className="space-x-6 text-sm text-gray-400">
+            <div className="space-x-6 text-sm text-gray-400 uppercase tracking-widest">
               <a href="#" className="hover:text-white transition-colors">Instagram</a>
               <a href="#" className="hover:text-white transition-colors">Twitter</a>
-              <a href="#" className="hover:text-white transition-colors">Arts</a>
+              <a href="#" className="hover:text-white transition-colors">Artsy</a>
             </div>
-            <p className="mt-8 text-xs text-gray-600">
-              © {new Date().getFullYear()} Noir & Blanc Gallery. All rights reserved.
+            <p className="mt-8 text-xs text-gray-600 uppercase tracking-widest">
+              © {new Date().getFullYear()} ASSIS Gallery. Todos os direitos reservados.
             </p>
           </div>
         </div>
