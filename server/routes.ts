@@ -9,6 +9,9 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import MemoryStore from "memorystore";
+import uploadRouter from "./upload";
+import express from "express";
+import path from "path";
 
 const scryptAsync = promisify(scrypt);
 const SessionStore = MemoryStore(session);
@@ -44,6 +47,10 @@ export async function registerRoutes(
 
   app.use(passport.initialize());
   app.use(passport.session());
+
+  // Upload Router and Static Files
+  app.use(uploadRouter);
+  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
@@ -154,35 +161,6 @@ export async function registerRoutes(
     await storage.deleteArtwork(Number(req.params.id));
     res.sendStatus(204);
   });
-
-  // Seed Data
-  const existingArt = await storage.getArtworks();
-  if (existingArt.length === 0) {
-    await storage.createArtwork({
-      title: "Monochrome Silence",
-      artist: "Elena Void",
-      price: 1200,
-      imageUrl: "https://images.unsplash.com/photo-1507643179173-61b0467d6773?auto=format&fit=crop&q=80&w=800",
-    });
-    await storage.createArtwork({
-      title: "Urban Shadows",
-      artist: "Marcus K.",
-      price: 950,
-      imageUrl: "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&q=80&w=800",
-    });
-    await storage.createArtwork({
-      title: "Abstract Geometry",
-      artist: "Sarah Lines",
-      price: 1500,
-      imageUrl: "https://images.unsplash.com/photo-1515462277126-2dd0c162007a?auto=format&fit=crop&q=80&w=800",
-    });
-     await storage.createArtwork({
-      title: "Fade to Black",
-      artist: "John Noir",
-      price: 2100,
-      imageUrl: "https://images.unsplash.com/photo-1507120410856-1f3551d4be3f?auto=format&fit=crop&q=80&w=800",
-    });
-  }
 
   return httpServer;
 }

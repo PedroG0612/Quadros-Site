@@ -26,7 +26,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArtworkCard } from "@/components/artwork-card";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Upload } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminPage() {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -35,6 +37,8 @@ export default function AdminPage() {
   const createMutation = useCreateArtwork();
   const deleteMutation = useDeleteArtwork();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
 
   // Redirect if not admin
   useEffect(() => {
@@ -50,14 +54,52 @@ export default function AdminPage() {
       artist: "",
       price: 0,
       imageUrl: "",
+      description: "",
+      year: new Date().getFullYear(),
+      medium: "",
     },
   });
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const { url } = await res.json();
+      form.setValue("imageUrl", url);
+      toast({
+        title: "Success",
+        description: "Image uploaded successfully",
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to upload image",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const onSubmit = (data: InsertArtwork) => {
     createMutation.mutate(data, {
       onSuccess: () => {
         setIsDialogOpen(false);
         form.reset();
+        toast({
+          title: "Success",
+          description: "Artwork added to collection",
+        });
       },
     });
   };
@@ -146,9 +188,86 @@ export default function AdminPage() {
                     name="imageUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Image URL</FormLabel>
+                        <FormLabel>Artwork Image</FormLabel>
+                        <div className="flex gap-4 items-end">
+                          <FormControl>
+                            <Input placeholder="https://..." {...field} className="rounded-none" />
+                          </FormControl>
+                          <div className="relative">
+                            <input
+                              type="file"
+                              className="hidden"
+                              id="file-upload"
+                              accept="image/*"
+                              onChange={onFileChange}
+                              disabled={isUploading}
+                            />
+                            <label htmlFor="file-upload">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="rounded-none"
+                                disabled={isUploading}
+                                asChild
+                              >
+                                <span>
+                                  {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                                </span>
+                              </Button>
+                            </label>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="year"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Year</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              {...field} 
+                              value={field.value || ""}
+                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                              className="rounded-none" 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="medium"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Medium</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. Oil on Canvas" {...field} value={field.value || ""} className="rounded-none" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Input placeholder="https://..." {...field} className="rounded-none" />
+                          <textarea 
+                            {...field} 
+                            value={field.value || ""}
+                            className="w-full min-h-[100px] bg-background border border-input px-3 py-2 text-sm rounded-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            placeholder="Describe the artwork..."
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -157,7 +276,7 @@ export default function AdminPage() {
                   <Button 
                     type="submit" 
                     className="w-full rounded-none"
-                    disabled={createMutation.isPending}
+                    disabled={createMutation.isPending || isUploading}
                   >
                     {createMutation.isPending ? "Adding..." : "Add to Collection"}
                   </Button>

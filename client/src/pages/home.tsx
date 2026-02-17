@@ -22,12 +22,12 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <h1 className="text-5xl md:text-7xl font-serif mb-6 leading-tight">
-              Elegance in <br/> Monochrome
+            <h1 className="text-5xl md:text-7xl font-serif mb-6 leading-tight uppercase tracking-tighter">
+              ASSIS
             </h1>
             <p className="text-lg md:text-xl text-gray-300 mb-10 max-w-xl mx-auto font-light leading-relaxed">
-              Discover a curated collection of black & white artistry. 
-              Where shadows speak louder than colors.
+              Curadoria exclusiva de arte monocromática. 
+              Onde as sombras falam mais alto que as cores.
             </p>
           </motion.div>
         </div>

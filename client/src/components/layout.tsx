@@ -1,14 +1,28 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { Menu, X, Moon, Sun, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">(
+    () => (localStorage.getItem("theme") as "light" | "dark") || "light"
+  );
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === "light" ? "dark" : "light");
+  };
 
   const navLinks = [
     { href: "/", label: "Gallery" },
@@ -22,8 +36,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto px-6 h-20 flex items-center justify-between">
           <Link href="/">
             <div className="flex flex-col cursor-pointer group">
-              <span className="font-serif text-2xl font-bold tracking-tighter group-hover:opacity-70 transition-opacity">
-                NOIR & BLANC
+              <span className="font-serif text-2xl font-bold tracking-tighter group-hover:opacity-70 transition-opacity uppercase">
+                ASSIS
               </span>
               <span className="text-[0.6rem] uppercase tracking-[0.2em] text-muted-foreground group-hover:text-foreground transition-colors">
                 Art Gallery
@@ -37,14 +51,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Link key={link.href} href={link.href}>
                 <span
                   className={cn(
-                    "text-sm font-medium tracking-wide uppercase cursor-pointer hover:text-black/60 transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:h-[1px] after:w-0 after:bg-black after:transition-all hover:after:w-full",
-                    location === link.href ? "after:w-full" : "text-muted-foreground"
+                    "text-sm font-medium tracking-wide uppercase cursor-pointer hover:text-primary/60 transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:h-[1px] after:w-0 after:bg-primary after:transition-all hover:after:w-full",
+                    location === link.href ? "after:w-full text-primary" : "text-muted-foreground"
                   )}
                 >
                   {link.label}
                 </span>
               </Link>
             ))}
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="rounded-none hover:bg-accent"
+            >
+              {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            </Button>
 
             {user ? (
               <div className="flex items-center gap-4 pl-4 border-l">
